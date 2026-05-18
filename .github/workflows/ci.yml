@@ -25,3 +25,13 @@ jobs:
 
       - name: Build del proyecto
         run: npm run build
+
+      - name: Construir imagen Docker
+        run: docker build -t app-new:test .
+
+      - name: Ejecutar contenedor Docker
+        run: |
+          trap 'docker rm -f app-new-test || true' EXIT
+          docker run -d --name app-new-test -p 3000:3000 app-new:test
+          sleep 5
+          curl --fail http://localhost:3000
