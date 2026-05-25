@@ -71,4 +71,4 @@ jobs:
       - name: Verify deployment
         run: |
           sleep 60
-          curl -f https://${{ env.APP_NAME }}.azurewebsites.net
+          curl -f https://${{ env.APP_NAME }}.azurewebsites.net/
