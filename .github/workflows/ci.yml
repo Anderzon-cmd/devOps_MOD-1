@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  ACR_NAME: deveplomentabcp
+  APP_NAME: devopsgitaction
+  RESOURCE_GROUP: DefaultResourceGroup-CQ
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -32,6 +37,38 @@ jobs:
       - name: Ejecutar contenedor Docker
         run: |
           trap 'docker rm -f app-new-test || true' EXIT
-          docker run -d --name app-new-test -p 3000:3000 app-new:test
+          docker run -d --name app-new-test -p 8080:8080 app-new:test
           sleep 5
-          curl --fail http://localhost:3000
+          curl --fail http://localhost:8080
+
+  build-and-deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Login to ACR
+        run: az acr login --name ${{ env.ACR_NAME }}
+
+      - name: Build and push image
+        run: |
+          docker build -t ${{ env.ACR_NAME }}.azurecr.io/task-manager:${{ github.sha }} .
+          docker push ${{ env.ACR_NAME }}.azurecr.io/task-manager:${{ github.sha }}
+
+      - name: Deploy to App Service
+        run: |
+          az webapp config container set \
+            --name ${{ env.APP_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --container-image-name ${{ env.ACR_NAME }}.azurecr.io/task-manager:${{ github.sha }}
+
+      - name: Verify deployment
+        run: |
+          sleep 60
+          curl -f https://${{ env.APP_NAME }}.azurewebsites.net
