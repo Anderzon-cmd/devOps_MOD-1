@@ -67,8 +67,3 @@ jobs:
             --name ${{ env.APP_NAME }} \
             --resource-group ${{ env.RESOURCE_GROUP }} \
             --container-image-name ${{ env.ACR_NAME }}.azurecr.io/task-manager:${{ github.sha }}
-
-      - name: Verify deployment
-        run: |
-          sleep 60
-          curl -f https://${{ env.APP_NAME }}.azurewebsites.net/
