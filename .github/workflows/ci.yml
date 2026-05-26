@@ -56,7 +56,7 @@ jobs:
       - name: Login to ACR
         run: az acr login --name ${{ env.ACR_NAME }}
 
-      - name: Build and push image
+      - name: Deploy
         run: |
           docker build -t ${{ env.ACR_NAME }}.azurecr.io/task-manager:${{ github.sha }} .
           docker push ${{ env.ACR_NAME }}.azurecr.io/task-manager:${{ github.sha }}
